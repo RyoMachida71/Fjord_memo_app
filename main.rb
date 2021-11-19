@@ -14,6 +14,10 @@ def load(_)
   File.open(FILE_PATH) { |f| JSON.load(f) }
 end
 
+def dump(memos)
+  File.open(FILE_PATH, 'w') { |f| JSON.dump(memos, f) }
+end
+
 FILE_PATH = 'data/data.json'
 FILE_PATH.freeze
 
@@ -30,7 +34,7 @@ end
 post '/memos' do
   @memos = load(FILE_PATH)
   @memos[SecureRandom.uuid] = { 'title' => params['title'], 'content' => params['content'] }
-  File.open(FILE_PATH, 'w') { |f| JSON.dump(@memos, f) }
+  dump(@memos)
   redirect to '/memos'
 end
 
@@ -56,13 +60,13 @@ patch '/memos/:id' do
   id = params[:id]
   @memos = load(FILE_PATH)
   @memos[id] = { 'title' => params['title'], 'content' => params['content'] }
-  File.open(FILE_PATH, 'w') { |f| JSON.dump(@memos, f) }
+  dump(@memos)
   redirect to '/memos'
 end
 
 delete '/memos/:id' do
   @memos = load(FILE_PATH)
   @memos.delete(params[:id])
-  File.open(FILE_PATH, 'w') { |f| JSON.dump(@memos, f) }
+  dump(@memos)
   redirect to '/memos'
 end
