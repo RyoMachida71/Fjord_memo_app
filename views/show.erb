@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset= 'utf-8'>
+    <title>メモアプリ</title>
+</head>
+<body>
+    <div>
+        <h1>メモアプリ</h1>
+    </div>
+    <div>
+        <h2><%=h(@memo["title"])%></h2>
+        <p><%=h(@memo["content"])%></p>
+    </div>
+    <div>
+    <a href='/memos/<%=@id%>/edit'><input type="submit" value="編集"></a>
+    <form method="post" action="/memos/<%=@id%>">
+        <input type="hidden" name="_method" value="DELETE">
+        <input type="submit" value="削除">
+    </form>
+    </div>
+    
+</body>
+</html>

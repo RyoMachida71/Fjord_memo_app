@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset= 'utf-8'>
+    <title>メモアプリ</title>
+</head>
+<body>
+    <div>
+        <h1>メモアプリ</h1>
+    </div>
+    <form action="/memos/<%=@id%>" method="post">
+    <div>
+        <label for="title">タイトル</label><br>
+        <textarea type="text" name="title" id="title" cols="20" rows="1"><%=h(@memo["title"])%></textarea><br>
+    </div>
+    <div>
+        <label for="content">内容</label><br>
+        <textarea type="text" name="content" id="content" cols="20" rows="10"><%=h(@memo["content"])%></textarea><br>
+    </div>
+    <div>
+        <input type="hidden" name="_method" value="PATCH">
+        <input type="submit" value="変更">
+    </div>
+    </form>
+</body>
+</html>
