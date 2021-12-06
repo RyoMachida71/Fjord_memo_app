@@ -3,49 +3,36 @@
 require 'sinatra'
 require 'sinatra/reloader'
 require 'json'
-require 'pg'
 
 helpers do
   def h(text)
     Rack::Utils.escape_html(text)
   end
 end
-CONNECTION = PG.connect(host: 'localhost', user: 'postgres', password: 'Pu6kgmth', dbname: 'memos')
-CONNECTION.freeze
 
-def create_table
-  CONNECTION.exec('CREATE TABLE IF NOT EXISTS memos_data (id TEXT PRIMARY KEY, title TEXT, content TEXT)')
+def load
+  unless File.exist?(FILE_PATH)
+    File.open(FILE_PATH, 'w') { |f| f.write('{}') }
+  end
+  File.open(FILE_PATH) { |f| JSON.load(f) }
 end
 
-def read
-  CONNECTION.exec('SELECT * FROM memos_data')
+def dump(memos)
+  File.open(FILE_PATH, 'w') { |f| JSON.dump(memos, f) }
 end
 
-def write(id, title, content)
-  CONNECTION.exec("INSERT INTO memos_data (id, title, content) VALUES('#{id}', '#{title}', '#{content}')")
-end
-
-def get_record(id)
-  CONNECTION.exec("SELECT * FROM memos_data WHERE id='#{id}'")
-end
-
-def rewrite(id, title, content)
-  CONNECTION.exec("UPDATE memos_data SET (title, content) = ('#{title}', '#{content}') WHERE id = '#{id}'")
-end
-
-def delete(id)
-  CONNECTION.exec("DELETE FROM memos_data WHERE id = '#{id}'")
-end
+FILE_PATH = 'data/data.json'
+FILE_PATH.freeze
 
 get '/memos' do
-  create_table
-  @memos = read
+  @memos = load
   erb :top
 end
 
 post '/memos' do
-  write(SecureRandom.uuid, params['title'], params['content'])
-  @memos = read
+  @memos = load
+  @memos[SecureRandom.uuid] = { 'title' => params['title'], 'content' => params['content'] }
+  dump(@memos)
   redirect to '/memos'
 end
 
@@ -54,21 +41,30 @@ get '/memos/new' do
 end
 
 get '/memos/:id' do
-  @memo = get_record(params['id'])
+  memos = load
+  @id = params[:id]
+  @memo = memos[@id]
   erb :show
 end
 
 get '/memos/:id/edit' do
-  @memo = get_record(params['id'])
+  memos = load
+  @id = params[:id]
+  @memo = memos[@id]
   erb :edit
 end
 
 patch '/memos/:id' do
-  @memo = rewrite(params['id'], params['title'], params['content'])
+  id = params[:id]
+  @memos = load
+  @memos[id] = { 'title' => params['title'], 'content' => params['content'] }
+  dump(@memos)
   redirect to '/memos'
 end
 
 delete '/memos/:id' do
-  delete(params['id'])
+  @memos = load
+  @memos.delete(params[:id])
+  dump(@memos)
   redirect to '/memos'
 end

@@ -10,14 +10,14 @@
   </div>
   <div>
     <h2>
-      <%=h(@memo[0]["title"])%>
+      <%=h(@memo["title"])%>
     </h2>
     <p>
-      <%=h(@memo[0]["content"])%>
+      <%=h(@memo["content"])%>
     </p>
   </div>
-  <div> <a href='/memos/<%=@memo[0]["id"]%>/edit'><input type="submit" value="編集"></a>
-    <form method="post" action="/memos/<%=@memo[0]["id"]%>"> <input type="hidden" name="_method" value="DELETE"> <input type="submit" value="削除"> </form>
+  <div> <a href='/memos/<%=@id%>/edit'><input type="submit" value="編集"></a>
+    <form method="post" action="/memos/<%=@id%>"> <input type="hidden" name="_method" value="DELETE"> <input type="submit" value="削除"> </form>
   </div>
 </body>
 </html>
