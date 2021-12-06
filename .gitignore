@@ -6,5 +6,5 @@ packages/
 *.suo
 *.user
 out/
-json/
 vendor/
+data/
