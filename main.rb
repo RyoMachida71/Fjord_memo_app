@@ -3,6 +3,8 @@
 require 'sinatra'
 require 'sinatra/reloader'
 require 'json'
+require 'pg'
+require 'dotenv'
 
 helpers do
   def h(text)
@@ -10,29 +12,38 @@ helpers do
   end
 end
 
-def load
-  unless File.exist?(FILE_PATH)
-    File.open(FILE_PATH, 'w') { |f| f.write('{}') }
-  end
-  File.open(FILE_PATH) { |f| JSON.load(f) }
+Dotenv.load
+CONNECTION = PG.connect(host: 'localhost', user: ENV['DB_USER'], password: ENV['DB_PASSWORD'], dbname: 'memos')
+CONNECTION.freeze
+
+def read
+  CONNECTION.exec('SELECT * FROM memos_data')
 end
 
-def dump(memos)
-  File.open(FILE_PATH, 'w') { |f| JSON.dump(memos, f) }
+def write(id, title, content)
+  CONNECTION.exec('INSERT INTO memos_data (id, title, content) VALUES($1, $2, $3);', [id, title, content])
 end
 
-FILE_PATH = 'data/data.json'
-FILE_PATH.freeze
+def get_record(id)
+  CONNECTION.exec('SELECT * FROM memos_data WHERE id=$1;', [id])
+end
+
+def rewrite(id, title, content)
+  CONNECTION.exec('UPDATE memos_data SET (title, content) = ($1, $2) WHERE id = $3;', [title, content, id])
+end
+
+def delete(id)
+  CONNECTION.exec('DELETE FROM memos_data WHERE id = $1;', [id])
+end
 
 get '/memos' do
-  @memos = load
+  @memos = read
   erb :top
 end
 
 post '/memos' do
-  @memos = load
-  @memos[SecureRandom.uuid] = { 'title' => params['title'], 'content' => params['content'] }
-  dump(@memos)
+  write(SecureRandom.uuid, params['title'], params['content'])
+  @memos = read
   redirect to '/memos'
 end
 
@@ -41,30 +52,21 @@ get '/memos/new' do
 end
 
 get '/memos/:id' do
-  memos = load
-  @id = params[:id]
-  @memo = memos[@id]
+  @memo = get_record(params['id'])
   erb :show
 end
 
 get '/memos/:id/edit' do
-  memos = load
-  @id = params[:id]
-  @memo = memos[@id]
+  @memo = get_record(params['id'])
   erb :edit
 end
 
 patch '/memos/:id' do
-  id = params[:id]
-  @memos = load
-  @memos[id] = { 'title' => params['title'], 'content' => params['content'] }
-  dump(@memos)
+  @memo = rewrite(params['id'], params['title'], params['content'])
   redirect to '/memos'
 end
 
 delete '/memos/:id' do
-  @memos = load
-  @memos.delete(params[:id])
-  dump(@memos)
+  delete(params['id'])
   redirect to '/memos'
 end
